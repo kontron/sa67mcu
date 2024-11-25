@@ -9,10 +9,13 @@
 #define IOMUX_BASE		0x40428000
 #define IOMUX_PINCM(n)		(IOMUX_BASE + 4 * (n))
 
-#define PINCM24_PF_UART0_TX	0x2
 #define PINCM_PC		BIT(7)
+#define PINCM_PF_NC		0x0
+#define PINCM_PF_GPIO		0x1
+#define PINCM24_PF_UART0_TX	0x2
 
 void iomux_init(void)
 {
+	iow(IOMUX_PINCM(19), PINCM_PF_GPIO | PINCM_PC);	/* PA18 GPO (LED_OUT) */
 	iow(IOMUX_PINCM(24), PINCM24_PF_UART0_TX | PINCM_PC); /* PA23 UART0_TX */
 }

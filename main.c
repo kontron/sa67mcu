@@ -5,6 +5,7 @@
 
 #include <stdbool.h>
 #include "adc.h"
+#include "gpio.h"
 #include "iomux.h"
 #include "misc.h"
 #include "sysctl.h"
@@ -12,15 +13,19 @@
 #include "uart.h"
 #include "vref.h"
 
+#define LED_PIN 18
+
 int main(void)
 {
 	clocks_init();
 	iomux_init();
 	systick_init();
-	iomux_init();
 	uart_init();
 	vref_init();
 	adc_init();
+	gpio_init();
+
+	gpio_out(LED_PIN);
 
 	printf("Hello World\n");
 	while (true) {
@@ -30,5 +35,6 @@ int main(void)
 		printf("AT %d\n", adc_value(2));
 		unsigned int temp = adc_temperature();
 		printf("T %d.%03d\n", temp / 1000, temp % 1000);
+		gpio_toggle(LED_PIN);
 	}
 }
