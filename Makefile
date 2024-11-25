@@ -46,7 +46,7 @@ LDFLAGS += -mthumb
 LDFLAGS += -static
 LIBS += -lgcc
 
-OBJECTS = startup.o main.o miniprintf.o uart.o systick.o adc.o vref.o misc.o
+OBJECTS = startup.o main.o miniprintf.o uart.o systick.o adc.o vref.o misc.o iomux.o sysctl.o
 
 DEPS := $(shell find -name '*.d')
 

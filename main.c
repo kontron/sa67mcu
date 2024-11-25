@@ -5,35 +5,17 @@
 
 #include <stdbool.h>
 #include "adc.h"
-#include "uart.h"
-#include "systick.h"
-#include "vref.h"
+#include "iomux.h"
 #include "misc.h"
-
-#define IOMUX_BASE		0x40428000
-#define IOMUX_PINCM(n)		(IOMUX_BASE + 4 * (n))
-
-#define PINCM24_PF_UART0_TX	0x2
-#define PINCM_PC		BIT(7)
-
-static void iomux_init(void)
-{
-	iow(IOMUX_PINCM(24), PINCM24_PF_UART0_TX | PINCM_PC); /* PA23 UART0_TX */
-}
-
-#define SYSCTL_BASE		0x400af000
-#define SYSCTL_MCLKCFG		(SYSCTL_BASE + 0x1104)
-#define MCLKCFG_USEMFTICK	BIT(12)
-#define MCLKCFG_MDIV_DIV_BY(n)	((n)-1)
-static void clocks_init(void)
-{
-	/* enable MFCLK (4MHz) */
-	iow(SYSCTL_MCLKCFG, MCLKCFG_USEMFTICK);
-}
+#include "sysctl.h"
+#include "systick.h"
+#include "uart.h"
+#include "vref.h"
 
 int main(void)
 {
 	clocks_init();
+	iomux_init();
 	systick_init();
 	iomux_init();
 	uart_init();
