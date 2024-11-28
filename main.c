@@ -7,6 +7,7 @@
 #include "adc.h"
 #include "cp.h"
 #include "gpio.h"
+#include "i2c.h"
 #include "iomux.h"
 #include "misc.h"
 #include "sysctl.h"
@@ -26,6 +27,7 @@ int main(void)
 	adc_init();
 	gpio_init();
 	cp_init();
+	i2c_init();
 
 	gpio_out(LED_PIN);
 
