@@ -1,49 +1,20 @@
-ifndef V
-Q=@
-#BRIEF+=CC AS LD AR OBJCOPY OBJDUMP RM SH LN MKDIR HOSTCC
-#ECHO=printf "  %-6s %s\n" $(1) $(2)
-#MSG=$@
-#M=@$(call ECHO,$(TAG),$@);
-#$(foreach VAR,$(BRIEF), \
-#	$(eval override $(VAR) = @$$(call ECHO,$(VAR),$$(MSG)); $($(VAR))))
-#$(foreach VAR,$(SILENT),$(eval override $(VAR) = @$($(VAR))))
-#$(eval INSTALL = @$(call ECHO,INSTALL,$$(^:$(SRC_PATH)/%=%)); $(INSTALL))
-endif
-
-CROSS_COMPILE?=arm-none-eabi-
-
-VERSION?=UNREL
+CROSS_COMPILE ?= arm-none-eabi-
+VERSION ?= "dev"
 
 CC = $(CROSS_COMPILE)gcc
 AS = $(CROSS_COMPILE)as
 LD = $(CROSS_COMPILE)gcc
 OBJCOPY = $(CROSS_COMPILE)objcopy
 
-CFLAGS += -mcpu=cortex-m0plus
-CFLAGS += -mfloat-abi=soft
-CFLAGS += -mlittle-endian
-CFLAGS += -mthumb
-CFLAGS += -mthumb-interwork
-CFLAGS += -ffreestanding
-CFLAGS += -ffunction-sections
-CFLAGS += -fdata-sections
-CFLAGS += -g3
-CFLAGS += -Os
-CFLAGS += -gstrict-dwarf
-CFLAGS += -Wall
-CFLAGS += -Werror
+CFLAGS  = -mcpu=cortex-m0plus -mfloat-abi=soft -mlittle-endian -mthumb
+CFLAGS += -mthumb-interwork -ffreestanding -ffunction-sections -fdata-sections
+CFLAGS += -g3 -Os -gstrict-dwarf -Wall -Werror
 
 #CFLAGS+=-DDEBUG_UART
 
 CFLAGS+=-DVERSION=\"$(VERSION)\"
 
-LDFLAGS += -T linker.ld
-LDFLAGS += -mcpu=cortex-m0plus
-LDFLAGS += -mlittle-endian
-LDFLAGS += -g
-LDFLAGS += -nostdlib
-LDFLAGS += -mthumb
-LDFLAGS += -static
+LDFLAGS = -T linker.ld -mcpu=cortex-m0plus -mlittle-endian -g -nostdlib -mthumb -static
 LIBS += -lgcc
 
 OBJECTS  = startup.o main.o miniprintf.o uart.o systick.o adc.o vref.o misc.o
