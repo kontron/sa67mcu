@@ -9,4 +9,3 @@
 void i2c_init(void);
 
 #endif /* __I2C_H */
-
