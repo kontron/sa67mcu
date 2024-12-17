@@ -10,4 +10,3 @@ void nvic_enable_irq(unsigned int irq);
 void nvic_disable_irq(unsigned int irq);
 
 #endif /* __NVIC_H */
-
