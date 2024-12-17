@@ -5,6 +5,7 @@
 
 #include <stdbool.h>
 #include "adc.h"
+#include "config.h"
 #include "cp.h"
 #include "gpio.h"
 #include "i2c.h"
@@ -28,10 +29,19 @@ int main(void)
 	gpio_init();
 	cp_init();
 	i2c_init();
+	config_init();
 
 	gpio_out(LED_PIN);
 
 	printf("Hello World\n");
+
+	if (config.val8)
+		config.val8 <<= 1;
+	else
+		config.val8 = 0xff;
+	printf("val8=%x\n", config.val8);
+	config_save();
+
 	while (true) {
 		udelay(500000);
 		cp_enable();
