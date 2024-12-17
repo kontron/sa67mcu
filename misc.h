@@ -19,5 +19,6 @@ static inline unsigned int ior(unsigned int addr)
 }
 
 unsigned int strlen(const char *s);
+void *memcpy(void *dst, const void *src, unsigned int n);
 int printf(const char *format,...) __attribute((format(printf,1,2)));
 #endif /* __MISC_H */
