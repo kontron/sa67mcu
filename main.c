@@ -31,6 +31,8 @@ int main(void)
 	i2c_init();
 	config_init();
 
+	i2c_enable_target_mode();
+
 	gpio_out(LED_PIN);
 
 	printf("Hello World\n");

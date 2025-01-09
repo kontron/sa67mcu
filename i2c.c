@@ -93,12 +93,26 @@ void i2c_init(void)
 
 	i2c_flush_fifos();
 
-	/* enable I2C target mode */
-	iow(I2C_SCTR, SCTR_TXTRIG_TXMODE | SCTR_ACTIVE);
+	/*
+	 * In target mode, no clock stretching, tx trigger mode is needed for
+	 * our FSM without clock streching.
+	 */
+	iow(I2C_SCTR, SCTR_TXTRIG_TXMODE);
 
 	/* unmask and enable interrupts */
 	iow(I2C_IMASK, INT_SSTOP | INT_SSTART | INT_STXFIFOTRG | INT_SRXDONE);
 	nvic_enable_irq(I2C_IRQ);
+}
+
+void i2c_enable_target_mode(void)
+{
+	/* enable I2C target mode, no */
+	iow(I2C_SCTR, ior(I2C_SCTR) | SCTR_ACTIVE);
+}
+
+void i2c_disable_target_mode(void)
+{
+	iow(I2C_SCTR, ior(I2C_SCTR) & ~SCTR_ACTIVE);
 }
 
 enum {
