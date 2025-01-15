@@ -18,10 +18,24 @@
 
 #define LED_PIN 18
 
+const struct iomux_config iomux_default_config[] = {
+	/* PA0 I2C0_SCL */
+	{ 1, PINCM_INENA | PINCM_HIZ1 | PINCM_PC | PINCM1_PF_I2C0_SCL },
+	/* PA1 I2C0_SDA */
+	{ 2, PINCM_INENA | PINCM_HIZ1 | PINCM_PC | PINCM2_PF_I2C0_SDA },
+	/* PA16 AIN/TIMG0_C0 (AIN_VDD_RTC) */
+	{ 17, PINCM_PC | PINCM17_PF_TIMG0_C0 },
+	/* PA18 GPO (LED_OUT) */
+	{ 19, PINCM_PC | PINCM_PF_GPIO },
+	/* PA23 UART0_TX */
+	{ 24, PINCM_PC | PINCM24_PF_UART0_TX },
+	{ 0 }
+};
+
 int main(void)
 {
 	clocks_init();
-	iomux_init();
+	iomux_conf(iomux_default_config);
 	systick_init();
 	uart_init();
 	vref_init();
