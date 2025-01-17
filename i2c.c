@@ -40,7 +40,36 @@
 #define I2C_CLKSEL		(I2C_BASE + 0x1004)
 #define CLKSEL_MFCLK		BIT(2)
 
+#define I2C_MSA			(I2C_BASE + 0x1210)
+#define MSA_DIR			BIT(0)
+#define MSA_SADDR(a)		((a) << 1)
+
+#define I2C_MCTR		(I2C_BASE + 0x1214)
+#define MCTR_MBLEN(l)		((l) << 16)
+#define MCTR_ACK		BIT(3)
+#define MCTR_STOP		BIT(2)
+#define MCTR_START		BIT(1)
+#define MCTR_BURSTRUN		BIT(0)
+
+#define I2C_MSR			(I2C_BASE + 0x1218)
+#define MSR_BUSBSY		BIT(6)
+#define MSR_IDLE		BIT(5)
+#define MSR_ARBLST		BIT(4)
+#define MSR_DATACK		BIT(3)
+#define MSR_ADRACK		BIT(2)
+#define MSR_ERR			BIT(1)
+#define MSR_BUSY		BIT(0)
+
+#define I2C_MRXDATA		(I2C_BASE + 0x121c)
+#define I2C_MTXDATA		(I2C_BASE + 0x1220)
 #define I2C_MTPR		(I2C_BASE + 0x1224)
+
+#define I2C_MCR			(I2C_BASE + 0x1228)
+#define MCR_ACTIVE		BIT(0)
+
+#define I2C_MFIFOSR		(I2C_BASE + 0x123c)
+#define MFIFOSR_TXFIFOCNT_MASK	0xf00
+#define MFIFOSR_RXFIFOCNT_MASK	0xf
 
 #define I2C_SOAR		(I2C_BASE + 0x1250)
 #define SOAR_OAREN		BIT(14)
@@ -93,6 +122,9 @@ void i2c_init(void)
 
 	i2c_flush_fifos();
 
+	/* enable I2C controller mode */
+	iow(I2C_MCR, MCR_ACTIVE);
+
 	/*
 	 * In target mode, no clock stretching, tx trigger mode is needed for
 	 * our FSM without clock streching.
@@ -113,6 +145,59 @@ void i2c_enable_target_mode(void)
 void i2c_disable_target_mode(void)
 {
 	iow(I2C_SCTR, ior(I2C_SCTR) & ~SCTR_ACTIVE);
+}
+
+static int i2c_wait_for_completion(void)
+{
+	unsigned int sr;
+
+	while ((sr = ior(I2C_MSR)) & MSR_BUSY);
+	if (sr & MSR_ERR)
+		return -1;
+	return 0;
+}
+
+int i2c_xfer_blocking(unsigned char addr,
+		      unsigned char *txbuf, unsigned int txlen,
+		      unsigned char *rxbuf, unsigned int rxlen)
+{
+	unsigned int mctr;
+
+	if (txbuf && txlen) {
+		iow(I2C_MSA, MSA_SADDR(addr));
+		mctr = MCTR_MBLEN(txlen) | MCTR_START | MCTR_BURSTRUN;
+		if (!rxlen)
+			mctr |= MCTR_STOP;
+		iow(I2C_MCTR, mctr);
+
+		while (txlen--) {
+			if (ior(I2C_MSR) & MSR_ERR)
+				return -1;
+			while (!(ior(I2C_MFIFOSR) & MFIFOSR_TXFIFOCNT_MASK));
+			iow(I2C_MTXDATA, *(txbuf++));
+		}
+
+		if (i2c_wait_for_completion())
+			return -1;
+	}
+
+	if (rxbuf && rxlen) {
+		iow(I2C_MSA, MSA_SADDR(addr) | MSA_DIR);
+		iow(I2C_MCTR, MCTR_MBLEN(rxlen) | MCTR_STOP | MCTR_START |
+			      MCTR_BURSTRUN);
+
+		while (rxlen--) {
+			if (ior(I2C_MSR) & MSR_ERR)
+				return -1;
+			while (!(ior(I2C_MFIFOSR) & MFIFOSR_RXFIFOCNT_MASK));
+			*(rxbuf++) = ior(I2C_MRXDATA);
+		}
+
+		if (i2c_wait_for_completion())
+			return -1;
+	}
+
+	return 0;
 }
 
 enum {
