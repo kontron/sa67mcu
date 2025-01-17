@@ -4,10 +4,11 @@
  *
  */
 
+#include "gpio.h"
 #include "i2c.h"
+#include "iomux.h"
 #include "misc.h"
 #include "nvic.h"
-
 #include "systick.h"
 
 #define I2C_IRQ			24
@@ -93,9 +94,73 @@
 
 #define I2C_SFIFOSR		(I2C_BASE + 0x1270)
 
+#define I2C_SCL_PIN 0
+#define I2C_SDA_PIN 1
+#define I2C_BUS_FREQ 100000
+#define I2C_RESET_CYCLES 9
+#define I2C_DELAY (1000000 / I2C_BUS_FREQ / 2)
+
 #ifndef CFG_I2C_ADDRESS
 #define CFG_I2C_ADDRESS 0x4a
 #endif
+
+const struct iomux_config i2cbus_default_config[] = {
+	/* PA0 I2C0_SCL */
+	{ 1, PINCM_INENA | PINCM_HIZ1 | PINCM_PC | PINCM1_PF_I2C0_SCL },
+	/* PA1 I2C0_SDA */
+	{ 2, PINCM_INENA | PINCM_HIZ1 | PINCM_PC | PINCM2_PF_I2C0_SDA },
+	{ 0 }
+};
+
+const struct iomux_config i2cbus_gpio_mode_config[] = {
+	/* PA0 I2C0_SCL */
+	{ 1, PINCM_INENA | PINCM_HIZ1 | PINCM_PC | PINCM_PF_GPIO },
+	/* PA1 I2C0_SDA */
+	{ 2, PINCM_INENA | PINCM_HIZ1 | PINCM_PC | PINCM_PF_GPIO },
+	{ 0 }
+};
+
+void i2c_bus_reset(void)
+{
+	int n = I2C_RESET_CYCLES;
+
+	/*
+	 * Disable i2c controller. Otherwise the bus will be marked as busy and
+	 * that bit will never clear and the controller stops working.
+	 */
+	iow(I2C_MCR, 0);
+
+	/* set I2C pins to GPIO mode as output */
+	gpio_set(I2C_SCL_PIN, 1);
+	gpio_set(I2C_SDA_PIN, 1);
+	gpio_out(I2C_SCL_PIN);
+	gpio_out(I2C_SDA_PIN);
+	iomux_conf(i2cbus_gpio_mode_config);
+
+	/* clock SCL until SDA is high */
+	while (!gpio_get(I2C_SDA_PIN) && n--) {
+		gpio_set(I2C_SCL_PIN, 0);
+		udelay(I2C_DELAY);
+		gpio_set(I2C_SCL_PIN, 1);
+		udelay(I2C_DELAY);
+	}
+
+	/* issue START and STOP */
+	if (n < I2C_RESET_CYCLES) {
+		gpio_set(I2C_SDA_PIN, 0);
+		udelay(I2C_DELAY);
+		gpio_set(I2C_SDA_PIN, 1);
+		udelay(I2C_DELAY);
+	}
+
+	/* set I2C pins back to I2C mode */
+	gpio_in(I2C_SDA_PIN);
+	gpio_in(I2C_SDA_PIN);
+	iomux_conf(i2cbus_default_config);
+
+	/* enable i2c controller again */
+	iow(I2C_MCR, MCR_ACTIVE);
+}
 
 static void i2c_flush_fifos(void)
 {

@@ -6,6 +6,7 @@
 #ifndef __I2C_H
 #define __I2C_H
 
+void i2c_bus_reset(void);
 void i2c_init(void);
 void i2c_enable_target_mode(void);
 void i2c_disable_target_mode(void);
