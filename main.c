@@ -10,24 +10,24 @@
 #include "gpio.h"
 #include "i2c.h"
 #include "iomux.h"
+#include "led.h"
 #include "misc.h"
 #include "sysctl.h"
 #include "systick.h"
 #include "uart.h"
 #include "vref.h"
 
-#define LED_PIN 18
 
 const struct iomux_config iomux_default_config[] = {
-	/* PA0 I2C0_SCL */
+	/* PA0 (SCL) */
 	{ 1, PINCM_INENA | PINCM_HIZ1 | PINCM_PC | PINCM1_PF_I2C0_SCL },
-	/* PA1 I2C0_SDA */
+	/* PA1 (SDA) */
 	{ 2, PINCM_INENA | PINCM_HIZ1 | PINCM_PC | PINCM2_PF_I2C0_SDA },
-	/* PA16 AIN/TIMG0_C0 (AIN_VDD_RTC) */
+	/* PA16 (analog RTC voltage input, both AIN and TIMG0_C0) */
 	{ 17, PINCM_PC | PINCM17_PF_TIMG0_C0 },
-	/* PA18 GPO (LED_OUT) */
-	{ 19, PINCM_PC | PINCM_PF_GPIO },
-	/* PA23 UART0_TX */
+	/* PA18 (healthy LED) */
+	{ 19, PINCM_PC | PINCM19_PF_TIMG4_C1 },
+	/* PA23 (debug UART) */
 	{ 24, PINCM_PC | PINCM24_PF_UART0_TX },
 	{ 0 }
 };
@@ -44,12 +44,18 @@ int main(void)
 	cp_init();
 	i2c_init();
 	config_init();
+	led_init();
 
 	i2c_enable_target_mode();
 
-	gpio_out(LED_PIN);
 
 	printf("Hello World\n");
+	printf("rst cause: %x\n", reset_cause);
+
+	if (reset_cause == RSTCAUSE_WWDT0)
+		led_set_mode(LED_MODE_WDOG_RESET);
+	else
+		led_set_mode(LED_MODE_NORMAL);
 
 	if (config.val8)
 		config.val8 <<= 1;
@@ -69,6 +75,5 @@ int main(void)
 		printf("AT %d\n", adc_value(2));
 		unsigned int temp = adc_temperature();
 		printf("T %d.%03d\n", temp / 1000, temp % 1000);
-		gpio_toggle(LED_PIN);
 	}
 }
