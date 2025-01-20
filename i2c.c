@@ -214,11 +214,31 @@ void i2c_disable_target_mode(void)
 
 static int i2c_wait_for_completion(void)
 {
+	unsigned int timeout = 10; /* 10 ms */
 	unsigned int sr;
 
-	while ((sr = ior(I2C_MSR)) & MSR_BUSY);
+	while ((sr = ior(I2C_MSR)) & MSR_BUSY) {
+		if (!timeout--)
+			return -1;
+		udelay(1000);
+	};
+
 	if (sr & MSR_ERR)
 		return -1;
+
+	return 0;
+}
+
+static int i2c_wait_for_bus_free(void)
+{
+	unsigned int timeout = 10; /* 100 ms */
+
+	while (ior(I2C_MSR) & MSR_BUSBSY) {
+		if (!timeout--)
+			return -1;
+		udelay(10000);
+	}
+
 	return 0;
 }
 
@@ -227,6 +247,13 @@ int i2c_xfer_blocking(unsigned char addr,
 		      unsigned char *rxbuf, unsigned int rxlen)
 {
 	unsigned int mctr;
+
+	/*
+	 * XXX This is racy because the bus might become occupied just after
+	 * this.
+	 */
+	if (i2c_wait_for_bus_free())
+		return -1;
 
 	if (txbuf && txlen) {
 		iow(I2C_MSA, MSA_SADDR(addr));
