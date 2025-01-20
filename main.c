@@ -16,6 +16,7 @@
 #include "systick.h"
 #include "uart.h"
 #include "vref.h"
+#include "wdt.h"
 
 
 const struct iomux_config iomux_default_config[] = {
@@ -44,6 +45,7 @@ int main(void)
 	cp_init();
 	i2c_init();
 	config_init();
+	wdt_init();
 	led_init();
 
 	i2c_enable_target_mode();
@@ -65,6 +67,7 @@ int main(void)
 	config_save();
 
 	while (true) {
+		wdt_kick();
 		udelay(500000);
 		cp_enable();
 		udelay(2000);
