@@ -34,7 +34,7 @@ const struct iomux_config iomux_default_config[] = {
 
 int main(void)
 {
-	clocks_init();
+	sysctl_init();
 	iomux_conf(iomux_default_config);
 	systick_init();
 	uart_init();

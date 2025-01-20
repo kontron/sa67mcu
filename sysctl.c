@@ -11,8 +11,14 @@
 #define MCLKCFG_USEMFTICK	BIT(12)
 #define MCLKCFG_MDIV_DIV_BY(n)	((n)-1)
 
-void clocks_init(void)
+#define SYSCTL_RSTCAUSE		(SYSCTL_BASE + 0x1220)
+
+unsigned int reset_cause;
+
+void sysctl_init(void)
 {
+	reset_cause = ior(SYSCTL_RSTCAUSE);
+
 	/* enable MFCLK (4MHz) */
 	iow(SYSCTL_MCLKCFG, MCLKCFG_USEMFTICK);
 }
