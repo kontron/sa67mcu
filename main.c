@@ -48,6 +48,7 @@ int main(void)
 	wdt_init();
 	led_init();
 
+	i2c_bus_reset();
 	i2c_enable_target_mode();
 
 
