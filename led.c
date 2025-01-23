@@ -15,7 +15,7 @@
 #define PWREN_KEY		0x26000000
 #define PWREN_ENABLE		BIT(0)
 
-#define TIM_CLKDIV		(TIMG4_BASE + 0x1004)
+#define TIM_CLKDIV		(TIMG4_BASE + 0x1000)
 #define CLKDIV_DIV_BY(n)	((n) - 1)
 
 #define TIM_CLKSEL		(TIMG4_BASE + 0x1008)
@@ -33,7 +33,7 @@
 #define TIM_CCACT1		(TIMG4_BASE + 0x1874)
 #define CCACT_ZACT_TOGGLE	(3 << 0)
 
-#define LFCLK_FREQ		32000
+#define LFCLK_FREQ		32768
 
 void led_init(void)
 {
@@ -74,5 +74,5 @@ void led_set_mode(enum led_mode mode)
 	 * set frequency, because we just toggle the output on zero condition we
 	 * have to be twice as fast as the configured frequency
 	 */
-	iow(TIM_LOAD, LFCLK_FREQ * period_ms * 2 / 1000 / 4);
+	iow(TIM_LOAD, LFCLK_FREQ * period_ms / 2 / 1000 / 4);
 }
