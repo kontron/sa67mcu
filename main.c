@@ -76,6 +76,7 @@ int main(void)
 		udelay(2000);
 		cp_disable();
 		udelay(1000);
+		printf("[%s]\n", ticks_str());
 		printf("AIN0 %d\n", adc_value(0));
 		printf("AIN8 %d\n", adc_value(1));
 		printf("AT %d\n", adc_value(2));
