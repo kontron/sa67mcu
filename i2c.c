@@ -309,6 +309,8 @@ static unsigned char i2c_txdata(unsigned char offset)
 	switch (offset) {
 	case 0 ... 2:
 		return config_read(offset - 0);
+	case 3:
+		return version;
 	case 4 ... 7:
 		return sl28wdt_read(offset - 4);
 	default:
