@@ -302,7 +302,24 @@ enum {
 
 static volatile int i2c_state = S_IDLE;
 static volatile unsigned char i2c_offset;
-static volatile unsigned char i2c_mem[256] = { 1, 2, 3, 4, 5, 6, 7 };
+
+static unsigned char i2c_txdata(unsigned char offset)
+{
+	switch (offset) {
+	case 4 ... 7:
+		return sl28wdt_read(offset - 4);
+	default:
+		return 0;
+	}
+}
+
+static void i2c_rxdata(unsigned char offset, unsigned char value)
+{
+	switch (offset) {
+	case 4 ... 7:
+		return sl28wdt_write(offset - 4, value);
+	}
+}
 
 void i2c0_irq(void)
 {
@@ -317,7 +334,7 @@ void i2c0_irq(void)
 			 * this is a read or a write.
 			 */
 			i2c_flush_fifos();
-			iow(I2C_STXDATA, i2c_mem[i2c_offset]);
+			iow(I2C_STXDATA, i2c_txdata(i2c_offset));
 			i2c_state = S_READ_OR_OFFSET;
 			break;
 		default:
@@ -328,7 +345,7 @@ void i2c0_irq(void)
 		switch (idx) {
 		case IIDX_STXFIFOTRG:
 			i2c_offset += 1;
-			iow(I2C_STXDATA, i2c_mem[i2c_offset]);
+			iow(I2C_STXDATA, i2c_txdata(i2c_offset));
 			i2c_state = S_READ;
 			break;
 		case IIDX_SRXDONE:
@@ -346,11 +363,11 @@ void i2c0_irq(void)
 		switch (idx) {
 		case IIDX_STXFIFOTRG:
 			i2c_offset += 1;
-			iow(I2C_STXDATA, i2c_mem[i2c_offset]);
+			iow(I2C_STXDATA, i2c_txdata(i2c_offset));
 			break;
 		case IIDX_SSTART:
 			i2c_flush_fifos();
-			iow(I2C_STXDATA, i2c_mem[i2c_offset]);
+			iow(I2C_STXDATA, i2c_txdata(i2c_offset));
 			i2c_state = S_READ_OR_OFFSET;
 			break;
 		case IIDX_SSTOP:
@@ -363,12 +380,12 @@ void i2c0_irq(void)
 	case S_WRITE:
 		switch (idx) {
 		case IIDX_SRXDONE:
-			i2c_mem[i2c_offset] = ior(I2C_SRXDATA);
+			i2c_rxdata(i2c_offset, ior(I2C_SRXDATA));
 			i2c_offset += 1;
 			break;
 		case IIDX_SSTART:
 			i2c_flush_fifos();
-			iow(I2C_STXDATA, i2c_mem[i2c_offset]);
+			iow(I2C_STXDATA, i2c_txdata(i2c_offset));
 			i2c_state = S_READ_OR_OFFSET;
 			break;
 		case IIDX_SSTOP:
