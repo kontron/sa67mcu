@@ -9,6 +9,7 @@
 #include "iomux.h"
 #include "misc.h"
 #include "nvic.h"
+#include "sl28wdt.h"
 #include "systick.h"
 
 #define I2C_IRQ			24

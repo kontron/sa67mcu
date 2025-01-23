@@ -12,6 +12,7 @@
 #include "iomux.h"
 #include "led.h"
 #include "misc.h"
+#include "sl28wdt.h"
 #include "sysctl.h"
 #include "systick.h"
 #include "ticks.h"
@@ -37,6 +38,7 @@ const struct iomux_config iomux_default_config[] = {
 int main(void)
 {
 	sysctl_init();
+	sl28wdt_init();
 	iomux_conf(iomux_default_config);
 	systick_init();
 	ticks_init();
