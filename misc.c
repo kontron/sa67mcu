@@ -27,6 +27,13 @@ void *memcpy(void *dst, const void *src, unsigned int n)
 	return dst;
 }
 
+void *memset(void *s, int c, unsigned int n)
+{
+	while (n--)
+		((unsigned char*)s)[n] = c;
+	return s;
+}
+
 int printf(const char *format,...)
 {
 	va_list args;
