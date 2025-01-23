@@ -28,9 +28,19 @@ void gpio_out(int pin)
 	iow(GPIO_DOESET31_0, 1 << pin);
 }
 
+void gpio_out_mask(unsigned int mask)
+{
+	iow(GPIO_DOESET31_0, mask);
+}
+
 void gpio_in(int pin)
 {
 	iow(GPIO_DOECLR31_0, 1 << pin);
+}
+
+void gpio_in_mask(unsigned int mask)
+{
+	iow(GPIO_DOECLR31_0, mask);
 }
 
 bool gpio_get(int pin)

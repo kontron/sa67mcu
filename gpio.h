@@ -10,7 +10,9 @@
 
 void gpio_init(void);
 void gpio_out(int pin);
+void gpio_out_mask(unsigned int mask);
 void gpio_in(int pin);
+void gpio_in_mask(unsigned int mask);
 bool gpio_get(int pin);
 void gpio_set(int pin, bool value);
 void gpio_toggle(int pin);
