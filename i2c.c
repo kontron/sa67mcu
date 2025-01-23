@@ -4,6 +4,7 @@
  *
  */
 
+#include "config.h"
 #include "gpio.h"
 #include "i2c.h"
 #include "iomux.h"
@@ -306,6 +307,8 @@ static volatile unsigned char i2c_offset;
 static unsigned char i2c_txdata(unsigned char offset)
 {
 	switch (offset) {
+	case 0 ... 2:
+		return config_read(offset - 0);
 	case 4 ... 7:
 		return sl28wdt_read(offset - 4);
 	default:
@@ -316,6 +319,8 @@ static unsigned char i2c_txdata(unsigned char offset)
 static void i2c_rxdata(unsigned char offset, unsigned char value)
 {
 	switch (offset) {
+	case 0 ... 2:
+		return config_write(offset - 0, value);
 	case 4 ... 7:
 		return sl28wdt_write(offset - 4, value);
 	}

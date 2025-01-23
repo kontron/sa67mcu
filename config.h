@@ -25,6 +25,8 @@ struct configuration {
 extern const struct configuration *config;
 
 void config_init(void);
-void config_save(void);
+void config_loop(void);
+void config_write(unsigned char offset, unsigned char value);
+unsigned char config_read(unsigned char offset);
 
 #endif /* __CONFIG_H */

@@ -87,6 +87,7 @@ int main(void)
 
 	while (true) {
 		wdt_kick();
+		config_loop();
 		udelay(500000);
 		cp_enable();
 		udelay(2000);
