@@ -6,13 +6,23 @@
 #ifndef __CONFIG_H
 #define __CONFIG_H
 
+#include "misc.h"
+
+#define CFG_F_INITIAL_PWR_OFF			BIT(0)
+#define CFG_F_DRIVE_BOOTMODE			BIT(1)
+#define CFG_F_ENABLE_WATCHDOG			BIT(2)
+#define CFG_F_DISABLE_FAILSAFE_WATCHDOG		BIT(3)
+#define CFG_F_DISABLE_WATCHDOG			BIT(4)
+#define CFG_F_DEBUG				BIT(15)
+
 struct configuration {
-	unsigned int val32;
-	unsigned char val8;
-	unsigned char pad[3];
+	unsigned char version;
+	unsigned short flags;
+	unsigned short bootmode;
+	unsigned char reserved1[3];
 } __attribute__((packed));
 
-extern struct configuration config;
+extern const struct configuration *config;
 
 void config_init(void);
 void config_save(void);

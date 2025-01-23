@@ -67,18 +67,17 @@ int main(void)
 
 	printf("sa67mcu v%d (%s)\n", version, gitversion);
 	printf("reset cause: %02Xh\n", reset_cause);
+	printf("Configuration:\n"
+	       "  version:%d\n"
+	       "  flags:%04x\n"
+	       "  bootmode:%04x\n",
+	       config->version, config->flags, config->bootmode);
 
 	if (reset_cause == RSTCAUSE_WWDT0)
 		led_set_mode(LED_MODE_WDOG_RESET);
 	else
 		led_set_mode(LED_MODE_NORMAL);
 
-	if (config.val8)
-		config.val8 <<= 1;
-	else
-		config.val8 = 0xff;
-	printf("val8=%x\n", config.val8);
-	config_save();
 
 	while (true) {
 		wdt_kick();

@@ -9,12 +9,12 @@
 #include "nvm.h"
 
 static struct configuration nvm_config __attribute__((section(".config")));
-struct configuration config;
+static struct configuration running_config;
+const struct configuration *config = &running_config;
 
 void config_init(void)
 {
-	_Static_assert(sizeof(config) == 8);
-	_Static_assert(sizeof(nvm_config) == 8);
+	_Static_assert(sizeof(struct configuration) == 8);
 
 	memcpy(&config, &nvm_config, sizeof(config));
 }
