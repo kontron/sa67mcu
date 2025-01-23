@@ -14,6 +14,7 @@
 #include "misc.h"
 #include "sysctl.h"
 #include "systick.h"
+#include "ticks.h"
 #include "uart.h"
 #include "vref.h"
 #include "wdt.h"
@@ -38,6 +39,7 @@ int main(void)
 	sysctl_init();
 	iomux_conf(iomux_default_config);
 	systick_init();
+	ticks_init();
 	uart_init();
 	vref_init();
 	adc_init();

@@ -19,6 +19,7 @@ LIBS += -lgcc
 
 OBJECTS  = startup.o main.o miniprintf.o uart.o systick.o adc.o vref.o misc.o
 OBJECTS += iomux.o sysctl.o gpio.o cp.o i2c.o nvic.o nvm.o config.o wdt.o led.o
+OBJECTS += ticks.o
 
 DEPS := $(shell find -name '*.d')
 
