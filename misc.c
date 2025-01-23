@@ -3,9 +3,10 @@
  * Copyright (c) 2025 Kontron Europe GmbH
  */
 
+#include "config.h"
 #include "miniprintf.h"
-#include "uart.h"
 #include "misc.h"
+#include "uart.h"
 
 unsigned int strlen(const char *s)
 {
@@ -38,6 +39,9 @@ int printf(const char *format,...)
 {
 	va_list args;
 	int rc;
+
+	if (!(config->flags & CFG_F_DEBUG))
+		return 0;
 
 	va_start(args,format);
 	rc = mini_vprintf_cooked(uart_putc, format, args);

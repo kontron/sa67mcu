@@ -31,6 +31,12 @@
 static const char *gitversion = GITVER;
 const unsigned char version = VERSION;
 
+const struct iomux_config iomux_uart_debug_config[] = {
+	/* PA23 (debug UART) */
+	{ 24, PINCM_PC | PINCM24_PF_UART0_TX },
+	{ 0 }
+};
+
 const struct iomux_config iomux_default_config[] = {
 	/* PA0 (SCL) */
 	{ 1, PINCM_INENA | PINCM_HIZ1 | PINCM_PC | PINCM1_PF_I2C0_SCL },
@@ -40,16 +46,17 @@ const struct iomux_config iomux_default_config[] = {
 	{ 17, PINCM_PC | PINCM17_PF_TIMG0_C0 },
 	/* PA18 (healthy LED) */
 	{ 19, PINCM_PC | PINCM19_PF_TIMG4_C1 },
-	/* PA23 (debug UART) */
-	{ 24, PINCM_PC | PINCM24_PF_UART0_TX },
 	{ 0 }
 };
 
 int main(void)
 {
+	config_init();
 	sysctl_init();
 	sl28wdt_init();
 	iomux_conf(iomux_default_config);
+	if (config->flags & 1 || CFG_F_DEBUG)
+		iomux_conf(iomux_uart_debug_config);
 	systick_init();
 	ticks_init();
 	uart_init();
@@ -58,7 +65,6 @@ int main(void)
 	gpio_init();
 	cp_init();
 	i2c_init();
-	config_init();
 	wdt_init();
 	led_init();
 
