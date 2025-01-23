@@ -8,6 +8,8 @@
 
 #define BIT(x) (1<<(x))
 
+extern const unsigned char version;
+
 static inline void iow(unsigned int addr, unsigned int data)
 {
 	*(volatile unsigned int *)addr = data;

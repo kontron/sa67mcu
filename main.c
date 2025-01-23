@@ -20,6 +20,16 @@
 #include "vref.h"
 #include "wdt.h"
 
+#ifndef VERSION
+#define VERSION 255
+#endif
+
+#ifndef GITVERSION
+#define GITVERSION ""
+#endif
+
+static const char *gitversion = GITVER;
+const unsigned char version = VERSION;
 
 const struct iomux_config iomux_default_config[] = {
 	/* PA0 (SCL) */
@@ -55,9 +65,8 @@ int main(void)
 	i2c_bus_reset();
 	i2c_enable_target_mode();
 
-
-	printf("Hello World\n");
-	printf("rst cause: %x\n", reset_cause);
+	printf("sa67mcu v%d (%s)\n", version, gitversion);
+	printf("reset cause: %02Xh\n", reset_cause);
 
 	if (reset_cause == RSTCAUSE_WWDT0)
 		led_set_mode(LED_MODE_WDOG_RESET);

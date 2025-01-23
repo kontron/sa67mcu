@@ -1,5 +1,19 @@
 CROSS_COMPILE ?= arm-none-eabi-
-VERSION ?= "dev"
+
+TAG := $(shell git describe --tags --abbrev=0 2>/dev/null || true)
+TAG_COMMIT := $(shell git rev-list --abbrev=8 --abbrev-commit --tags -1)
+COMMIT := $(shell git rev-parse --short=8 HEAD)
+
+GITVER := $(shell git describe --tags --abbrev=8 2>/dev/null || true)
+ifeq ($(GITVER),)
+	GITVER = g$(COMMIT)
+endif
+
+ifeq ($(TAG_COMMIT),$(COMMIT))
+	VERSION = $(TAG:v%=%)
+else
+	VERSION = 255
+endif
 
 CC = $(CROSS_COMPILE)gcc
 AS = $(CROSS_COMPILE)as
@@ -9,10 +23,7 @@ OBJCOPY = $(CROSS_COMPILE)objcopy
 CFLAGS  = -mcpu=cortex-m0plus -mfloat-abi=soft -mlittle-endian -mthumb
 CFLAGS += -mthumb-interwork -ffreestanding -ffunction-sections -fdata-sections
 CFLAGS += -g3 -Os -gstrict-dwarf -Wall -Werror
-
-#CFLAGS+=-DDEBUG_UART
-
-CFLAGS+=-DVERSION=\"$(VERSION)\"
+CFLAGS += -DVERSION=$(VERSION) -DGITVER=\"$(GITVER)\"
 
 LDFLAGS = -T linker.ld -mcpu=cortex-m0plus -mlittle-endian -g -nostdlib -mthumb -static
 LIBS += -lgcc
