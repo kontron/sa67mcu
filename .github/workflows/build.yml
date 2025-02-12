@@ -1,0 +1,20 @@
+name: build
+
+on: [push, pull_request]
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  build:
+    name: Compile the firmware
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+      - name: Install Dependencies
+        run: sudo apt-get -y install gcc-arm-none-eabi
+      - name: Compile
+        run: make
