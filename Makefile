@@ -45,6 +45,10 @@ mcu.elf: $(OBJECTS)
 mcu.bin: mcu.elf
 	$(OBJCOPY) -O binary $< $@
 
+.PHONY: show-version
+show-version:
+	@echo $(GITVER)
+
 .PHONY: clean
 clean:
 	$(Q)rm -f mcu.elf mcu.bin $(DEPS) $(OBJECTS)
