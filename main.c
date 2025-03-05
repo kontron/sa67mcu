@@ -55,7 +55,7 @@ int main(void)
 	sysctl_init();
 	sl28wdt_init();
 	iomux_conf(iomux_default_config);
-	if (config->flags & 1 || CFG_F_DEBUG)
+	if (config->flags & CFG_F_DEBUG)
 		iomux_conf(iomux_uart_debug_config);
 	systick_init();
 	ticks_init();
