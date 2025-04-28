@@ -4,6 +4,7 @@
  *
  */
 
+#include "bootmode.h"
 #include "config.h"
 #include "gpio.h"
 #include "i2c.h"
@@ -325,6 +326,8 @@ static void i2c_rxdata(unsigned char offset, unsigned char value)
 		return config_write(offset - 0, value);
 	case 4 ... 7:
 		return sl28wdt_write(offset - 4, value);
+	case 16 ... 17:
+		return bootmode_write(offset - 16, value);
 	}
 }
 

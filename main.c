@@ -6,6 +6,7 @@
 #include <stdbool.h>
 #include <stddef.h>
 #include "adc.h"
+#include "bootmode.h"
 #include "config.h"
 #include "cp.h"
 #include "gpio.h"
@@ -49,6 +50,28 @@ const struct iomux_config iomux_default_config[] = {
 	{ 17, PINCM_PC | PINCM17_PF_TIMG0_C0 },
 	/* PA18 (healthy LED) */
 	{ 19, PINCM_PC | PINCM19_PF_TIMG4_C1 },
+	/* PA2 (BOOTMODE03) */
+	{ 3, PINCM_PC | PINCM_PF_GPIO },
+	/* PA3 (BOOTMODE04) */
+	{ 4, PINCM_PC | PINCM_PF_GPIO },
+	/* PA4 (BOOTMODE05) */
+	{ 5, PINCM_PC | PINCM_PF_GPIO },
+	/* PA5 (BOOTMODE06) */
+	{ 6, PINCM_PC | PINCM_PF_GPIO },
+	/* PA6 (BOOTMODE07) */
+	{ 7, PINCM_PC | PINCM_PF_GPIO },
+	/* PA7 (BOOTMODE08) */
+	{ 8, PINCM_PC | PINCM_PF_GPIO },
+	/* PA8 (BOOTMODE09) */
+	{ 9, PINCM_PC | PINCM_PF_GPIO },
+	/* PA23 (BOOTMODE10) */
+	{ 24, PINCM_PC | PINCM_PF_GPIO },
+	/* PA22 (BOOTMODE11) */
+	{ 23, PINCM_PC | PINCM_PF_GPIO },
+	/* PA9 (BOOTMODE12) */
+	{ 10, PINCM_PC | PINCM_PF_GPIO },
+	/* PA10 (BOOTMODE13) */
+	{ 11, PINCM_PC | PINCM_PF_GPIO },
 	{ 0 }
 };
 
@@ -91,6 +114,7 @@ int main(void)
 	i2c_init();
 	wdt_init();
 	led_init();
+	bootmode_init();
 
 	i2c_bus_reset();
 
