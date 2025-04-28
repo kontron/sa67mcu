@@ -103,7 +103,7 @@
 #define I2C_DELAY (1000000 / I2C_BUS_FREQ / 2)
 
 #ifndef CFG_I2C_ADDRESS
-#define CFG_I2C_ADDRESS 0x50
+#define CFG_I2C_ADDRESS 0x4a
 #endif
 
 const struct iomux_config i2cbus_default_config[] = {
