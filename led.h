@@ -6,12 +6,7 @@
 #ifndef __LED_H
 #define __LED_H
 
-enum led_mode {
-	LED_MODE_NORMAL,
-	LED_MODE_WDOG_RESET,
-};
-
 void led_init(void);
-void led_set_mode(enum led_mode mode);
+void led_set_period(int period_ms);
 
 #endif /* __LED_H */

@@ -24,6 +24,9 @@
 #define TIM_CCPD		(TIMG4_BASE + 0x1100)
 #define CCPD_C0CCP1_OUTPUT	BIT(1)
 
+#define TIM_ODIS		(TIMG4_BASE + 0x1104)
+#define ODIS_C0CCP1		BIT(1)
+
 #define TIM_CCLKCTL		(TIMG4_BASE + 0x1108)
 #define CCLKCTL_CLKEN		BIT(0)
 
@@ -61,20 +64,25 @@ void led_init(void)
 	iow(TIM_CTRCTL, CTRCTL_REPEAT | CTRCTL_EN);
 }
 
-void led_set_mode(enum led_mode mode)
-{
-	unsigned int period_ms;
 
-	switch (mode) {
-	case LED_MODE_NORMAL:
-		period_ms = 1000;
-		break;
-	case LED_MODE_WDOG_RESET:
-		period_ms = 200;
-		break;
-	default:
+void led_set_period(int period_ms)
+{
+	static int last_period_ms = -1;
+
+	/* don't do anything if the same period was requested */
+	if (last_period_ms == period_ms)
 		return;
-	};
+
+	last_period_ms = period_ms;
+
+	/* disable outout if necessary */
+	if (!period_ms)
+		iow(TIM_ODIS, ODIS_C0CCP1);
+	else
+		iow(TIM_ODIS, 0);
+
+	/* enable output */
+	iow(TIM_CCPD, CCPD_C0CCP1_OUTPUT);
 
 	/*
 	 * set frequency, because we just toggle the output on zero condition we

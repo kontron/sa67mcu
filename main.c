@@ -80,9 +80,9 @@ int main(void)
 	       config->version, config->flags, config->bootmode);
 
 	if (reset_cause == RSTCAUSE_WWDT0)
-		led_set_mode(LED_MODE_WDOG_RESET);
+		led_set_period(200);
 	else
-		led_set_mode(LED_MODE_NORMAL);
+		led_set_period(1000);
 
 
 	while (true) {
