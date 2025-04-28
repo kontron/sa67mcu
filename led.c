@@ -24,6 +24,9 @@
 #define TIM_CCPD		(TIMG4_BASE + 0x1100)
 #define CCPD_C0CCP1_OUTPUT	BIT(1)
 
+#define TIM_CCLKCTL		(TIMG4_BASE + 0x1108)
+#define CCLKCTL_CLKEN		BIT(0)
+
 #define TIM_CTRCTL		(TIMG4_BASE + 0x1804)
 #define CTRCTL_EN		BIT(0)
 #define CTRCTL_REPEAT		(1 << 1)
@@ -44,6 +47,9 @@ void led_init(void)
 
 	/* prescale by /4 */
 	iow(TIM_CLKDIV, CLKDIV_DIV_BY(4));
+
+	/* ungate the clock */
+	iow(TIM_CCLKCTL, CCLKCTL_CLKEN);
 
 	/* toggle output on zero */
 	iow(TIM_CCACT1, CCACT_ZACT_TOGGLE);

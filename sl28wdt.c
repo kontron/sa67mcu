@@ -30,6 +30,9 @@
 #define TIM_CCPD		(TIMG1_BASE + 0x1100)
 #define CCPD_C0CCP1_OUTPUT	BIT(1)
 
+#define TIM_CCLKCTL		(TIMG1_BASE + 0x1108)
+#define CCLKCTL_CLKEN		BIT(0)
+
 #define TIM_CPS			(TIMG1_BASE + 0x110c)
 #define CPS_DIV_BY(n)		((n) - 1)
 
@@ -159,6 +162,9 @@ void sl28wdt_init(void)
 
 	/* (second) prescale by 16 */
 	iow(TIM_CPS, CPS_DIV_BY(16));
+
+	/* ungate the clock */
+	iow(TIM_CCLKCTL, CCLKCTL_CLKEN);
 
 	/* set output low on zero */
 	iow(TIM_CCACT0, CCACT_ZACT_LOW);

@@ -22,6 +22,9 @@
 #define TIM_IMASK		(TIMG2_BASE + 0x1028)
 #define INT_Z			BIT(0)
 
+#define TIM_CCLKCTL		(TIMG2_BASE + 0x1108)
+#define CCLKCTL_CLKEN		BIT(0)
+
 #define TIM_CTRCTL		(TIMG2_BASE + 0x1804)
 #define CTRCTL_EN		BIT(0)
 #define CTRCTL_REPEAT		(1 << 1)
@@ -75,6 +78,9 @@ void ticks_init(void)
 
 	/* use 4MHz mid frequency clock */
 	iow(TIM_CLKSEL, CLKSEL_MFCLK);
+
+	/* ungate the clock */
+	iow(TIM_CCLKCTL, CCLKCTL_CLKEN);
 
 	/* set period */
 	iow(TIM_LOAD, MFCLK_FREQ * TICKS_PERIOD_MS / 1000);
