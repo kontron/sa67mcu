@@ -41,6 +41,9 @@ const struct iomux_config iomux_uart_debug_config[] = {
 	{ 0 }
 };
 
+#define POR_REQn_PIN 15
+#define FORCE_GBE_RST_PIN 17
+
 const struct iomux_config iomux_default_config[] = {
 	/* PA0 (SCL) */
 	{ 1, PINCM_INENA | PINCM_HIZ1 | PINCM_PC | PINCM1_PF_I2C0_SCL },
@@ -50,6 +53,10 @@ const struct iomux_config iomux_default_config[] = {
 	{ 17, PINCM_PC | PINCM17_PF_TIMG0_C0 },
 	/* PA18 (healthy LED) */
 	{ 19, PINCM_PC | PINCM19_PF_TIMG4_C1 },
+	/* PA15 (POR_REQ#) */
+	{ 16, PINCM_INENA | PINCM_PC | PINCM_HIZ1 | PINCM_PF_GPIO },
+	/* PA17 (FORCE_GBE_RST) */
+	{ 18, PINCM_PC | PINCM_PF_GPIO },
 	/* PA2 (BOOTMODE03) */
 	{ 3, PINCM_PC | PINCM_PF_GPIO },
 	/* PA3 (BOOTMODE04) */
@@ -76,6 +83,34 @@ const struct iomux_config iomux_default_config[] = {
 };
 
 #define PMIC_MASK_STARTUP 0x52
+
+static volatile bool do_sys_reset;
+
+void board_sys_reset(bool failsafe)
+{
+	do_sys_reset = true;
+}
+
+static void board_reset_blocking(void)
+{
+	gpio_set(POR_REQn_PIN, 0);
+	udelay(1000);
+	gpio_set(POR_REQn_PIN, 1);
+}
+
+static bool do_eth_reset;
+
+void board_eth_reset(void)
+{
+	do_eth_reset = true;
+}
+
+static void eth_reset_blocking(void)
+{
+	gpio_set(FORCE_GBE_RST_PIN, 1);
+	udelay(1000);
+	gpio_set(FORCE_GBE_RST_PIN, 0);
+}
 
 static void pmic_abort_power_up(void)
 {
@@ -116,6 +151,12 @@ int main(void)
 	led_init();
 	bootmode_init();
 
+	/* init GPIOs */
+	gpio_set(POR_REQn_PIN, 1);
+	gpio_out(POR_REQn_PIN);
+	gpio_set(FORCE_GBE_RST_PIN, 0);
+	gpio_out(FORCE_GBE_RST_PIN);
+
 	i2c_bus_reset();
 
 	printf("sa67mcu v%d (%s)\n", version, gitversion);
@@ -138,6 +179,22 @@ int main(void)
 	else
 		led_set_period(1000);
 
+	while (true) {
+		wdt_kick();
+		config_loop();
+
+		if (do_eth_reset) {
+			printf("Resetting ethernet PHYs..\n");
+			eth_reset_blocking();
+			do_eth_reset = false;
+		}
+
+		if (do_sys_reset) {
+			printf("Resetting board..\n");
+			board_reset_blocking();
+			do_sys_reset = false;
+		}
+	}
 
 	while (true) {
 		wdt_kick();
