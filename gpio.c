@@ -11,12 +11,16 @@
 #define PWREN_KEY		0x26000000
 #define PWREN_ENABLE		BIT(0)
 
+#define GPIO_IMASK		(GPIO_BASE + 0x1028)
+#define GPIO_ICLR		(GPIO_BASE + 0x1048)
 #define GPIO_DOUTSET31_0	(GPIO_BASE + 0x1290)
 #define GPIO_DOUTCLR31_0	(GPIO_BASE + 0x12a0)
 #define GPIO_DOUTTGL31_0	(GPIO_BASE + 0x12b0)
 #define GPIO_DOESET31_0		(GPIO_BASE + 0x12d0)
 #define GPIO_DOECLR31_0		(GPIO_BASE + 0x12e0)
 #define GPIO_DIN31_0		(GPIO_BASE + 0x1380)
+#define GPIO_POLARITY15_0	(GPIO_BASE + 0x1390)
+#define GPIO_POLARITY31_16	(GPIO_BASE + 0x13a0)
 
 void gpio_init(void)
 {
@@ -74,4 +78,36 @@ void gpio_mask_clr(unsigned int mask)
 void gpio_mask_toggle(unsigned int mask)
 {
 	iow(GPIO_DOUTTGL31_0, mask);
+}
+
+void gpio_conf_irq(int pin, int mode)
+{
+	unsigned int reg = GPIO_POLARITY15_0;
+	unsigned int val;
+
+	if (pin >= 16) {
+		reg = GPIO_POLARITY31_16;
+		pin -= 16;
+	}
+
+	val = ior(reg);
+	val &= ~(3 << (pin << 1));
+	val |= mode << (pin << 1);
+
+	iow(reg, val);
+}
+
+void gpio_irq_ack(int pin)
+{
+	iow(GPIO_ICLR, (1 << pin));
+}
+
+void gpio_irq_unmask(int pin)
+{
+	iow(GPIO_IMASK, ior(GPIO_IMASK) | (1 << pin));
+}
+
+void gpio_irq_mask(int pin)
+{
+	iow(GPIO_IMASK, ior(GPIO_IMASK) & ~(1 << pin));
 }
