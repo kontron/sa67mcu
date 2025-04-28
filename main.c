@@ -4,6 +4,7 @@
  */
 
 #include <stdbool.h>
+#include <stddef.h>
 #include "adc.h"
 #include "config.h"
 #include "cp.h"
@@ -19,6 +20,8 @@
 #include "uart.h"
 #include "vref.h"
 #include "wdt.h"
+
+#define PMIC_I2C_ADDR 0x44
 
 #ifndef VERSION
 #define VERSION 255
@@ -49,6 +52,27 @@ const struct iomux_config iomux_default_config[] = {
 	{ 0 }
 };
 
+#define PMIC_MASK_STARTUP 0x52
+
+static void pmic_abort_power_up(void)
+{
+	unsigned char buf[2];
+	int ret;
+
+	buf[0] = PMIC_MASK_STARTUP;
+	buf[1] = 0x33;
+
+	ret = i2c_xfer_blocking(PMIC_I2C_ADDR, buf, sizeof(buf), NULL, 0);
+	if (ret)
+		printf("ERROR: Couldn't write to PMIC\n");
+}
+
+static void pmic_configure(void)
+{
+	if (config->flags & CFG_F_INITIAL_PWR_OFF)
+		pmic_abort_power_up();
+}
+
 int main(void)
 {
 	config_init();
@@ -69,7 +93,6 @@ int main(void)
 	led_init();
 
 	i2c_bus_reset();
-	i2c_enable_target_mode();
 
 	printf("sa67mcu v%d (%s)\n", version, gitversion);
 	printf("reset cause: %02Xh\n", reset_cause);
@@ -78,6 +101,13 @@ int main(void)
 	       "  flags:%04x\n"
 	       "  bootmode:%04x\n",
 	       config->version, config->flags, config->bootmode);
+
+	/* when powering-up for the first time, configure the PMIC and reset the PHYs */
+	if (reset_cause == RSTCAUSE_POR) {
+		pmic_configure();
+	}
+
+	i2c_enable_target_mode();
 
 	if (reset_cause == RSTCAUSE_WWDT0)
 		led_set_period(200);
