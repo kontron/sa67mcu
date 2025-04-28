@@ -8,6 +8,7 @@
 
 #include <stdbool.h>
 
+void board_disable_failsafe(void);
 void board_eth_reset(void);
 void board_sys_reset(bool failsafe_mode);
 

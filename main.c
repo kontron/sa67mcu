@@ -14,6 +14,7 @@
 #include "iomux.h"
 #include "led.h"
 #include "misc.h"
+#include "nvic.h"
 #include "sl28wdt.h"
 #include "sysctl.h"
 #include "systick.h"
@@ -41,6 +42,9 @@ const struct iomux_config iomux_uart_debug_config[] = {
 	{ 0 }
 };
 
+#define INT_GROUP1_IRQ 1
+
+#define MCU_SPI_FLASH_WP_DISn_PIN 13
 #define POR_REQn_PIN 15
 #define FORCE_GBE_RST_PIN 17
 
@@ -49,10 +53,14 @@ const struct iomux_config iomux_default_config[] = {
 	{ 1, PINCM_INENA | PINCM_HIZ1 | PINCM_PC | PINCM1_PF_I2C0_SCL },
 	/* PA1 (SDA) */
 	{ 2, PINCM_INENA | PINCM_HIZ1 | PINCM_PC | PINCM2_PF_I2C0_SDA },
+	/* PA14 (WDT_TIME_OUT#) */
+	{ 15, PINCM_PC | PINCM15_PF_TIMG1_C0 },
 	/* PA16 (analog RTC voltage input, both AIN and TIMG0_C0) */
 	{ 17, PINCM_PC | PINCM17_PF_TIMG0_C0 },
 	/* PA18 (healthy LED) */
 	{ 19, PINCM_PC | PINCM19_PF_TIMG4_C1 },
+	/* PA13 (MCU_SPI_FLASH_WP_DIS#) */
+	{ 14, PINCM_INENA | PINCM_PC | PINCM_HIZ1 | PINCM_PF_GPIO },
 	/* PA15 (POR_REQ#) */
 	{ 16, PINCM_INENA | PINCM_PC | PINCM_HIZ1 | PINCM_PF_GPIO },
 	/* PA17 (FORCE_GBE_RST) */
@@ -84,10 +92,37 @@ const struct iomux_config iomux_default_config[] = {
 
 #define PMIC_MASK_STARTUP 0x52
 
+
+static bool failsafe_mode;
+static bool failsafe_mode_latch;
+
+static volatile bool do_disable_failsafe;
+
+void board_disable_failsafe(void)
+{
+	do_disable_failsafe = true;
+}
+
+void group1_irq(void)
+{
+	bool por = !gpio_get(POR_REQn_PIN);
+
+	printf("Board reset detected (POR %d)\n", por);
+
+	failsafe_mode_latch = failsafe_mode;
+
+	if (por)
+		sl28wdt_stop();
+	else
+		sl28wdt_reset(false);
+}
+
 static volatile bool do_sys_reset;
 
 void board_sys_reset(bool failsafe)
 {
+	failsafe_mode = failsafe;
+	failsafe_mode_latch = failsafe;
 	do_sys_reset = true;
 }
 
@@ -129,6 +164,15 @@ static void pmic_configure(void)
 {
 	if (config->flags & CFG_F_INITIAL_PWR_OFF)
 		pmic_abort_power_up();
+}
+
+static bool board_powered(void)
+{
+	/*
+	 * XXX we don't use the WP disable pin for now. Thus infer the board
+	 * power state by the external pull-up.
+	 */
+	return gpio_get(MCU_SPI_FLASH_WP_DISn_PIN);
 }
 
 int main(void)
@@ -175,14 +219,29 @@ int main(void)
 
 	i2c_enable_target_mode();
 
-	if (reset_cause == RSTCAUSE_WWDT0)
-		led_set_period(200);
+	if (!gpio_get(POR_REQn_PIN))
+		sl28wdt_stop();
 	else
-		led_set_period(1000);
+		sl28wdt_reset(true);
+
+	gpio_conf_irq(POR_REQn_PIN,
+		      GPIO_IRQ_FALLING_EDGE |GPIO_IRQ_RISING_EDGE);
+	gpio_irq_ack(POR_REQn_PIN);
+	gpio_irq_unmask(POR_REQn_PIN);
+
+	nvic_enable_irq(INT_GROUP1_IRQ);
 
 	while (true) {
 		wdt_kick();
 		config_loop();
+
+		/* update the LED state */
+		if (!board_powered())
+			led_set_period(0);
+		else if (failsafe_mode_latch)
+			led_set_period(200);
+		else
+			led_set_period(1000);
 
 		if (do_eth_reset) {
 			printf("Resetting ethernet PHYs..\n");
@@ -190,7 +249,18 @@ int main(void)
 			do_eth_reset = false;
 		}
 
+		if (do_disable_failsafe) {
+			printf("Disable failsafe mode..\n");
+			failsafe_mode = false;
+			bootmode_init();
+			do_disable_failsafe = false;
+		}
+
 		if (do_sys_reset) {
+			if (failsafe_mode) {
+				printf("Enable failsafe mode..\n");
+				bootmode_enable(BOOTMODE_FAILSAFE);
+			}
 			printf("Resetting board..\n");
 			board_reset_blocking();
 			do_sys_reset = false;
