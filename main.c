@@ -170,6 +170,7 @@ int main(void)
 	/* when powering-up for the first time, configure the PMIC and reset the PHYs */
 	if (reset_cause == RSTCAUSE_POR) {
 		pmic_configure();
+		eth_reset_blocking();
 	}
 
 	i2c_enable_target_mode();
