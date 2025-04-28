@@ -12,7 +12,6 @@
 #define CFG_F_DRIVE_BOOTMODE			BIT(1)
 #define CFG_F_ENABLE_WATCHDOG			BIT(2)
 #define CFG_F_DISABLE_FAILSAFE_WATCHDOG		BIT(3)
-#define CFG_F_DISABLE_WATCHDOG			BIT(4)
 #define CFG_F_DEBUG				BIT(15)
 
 struct configuration {
