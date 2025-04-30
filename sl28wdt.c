@@ -74,7 +74,7 @@
 #define REG_CNT		3
 #define KICK_VALUE	0x6b
 
-#define DEFAULT_TOUT	8
+#define DEFAULT_TOUT	10 /* in seconds */
 
 static volatile unsigned char ctrl;
 
