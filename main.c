@@ -279,20 +279,4 @@ int main(void)
 			do_sys_reset = false;
 		}
 	}
-
-	while (true) {
-		wdt_kick();
-		config_loop();
-		udelay(500000);
-		cp_enable();
-		udelay(2000);
-		cp_disable();
-		udelay(1000);
-		printf("[%s]\n", ticks_str());
-		printf("AIN0 %d\n", adc_value(0));
-		printf("AIN8 %d\n", adc_value(1));
-		printf("AT %d\n", adc_value(2));
-		unsigned int temp = adc_temperature();
-		printf("T %d.%03d\n", temp / 1000, temp % 1000);
-	}
 }
