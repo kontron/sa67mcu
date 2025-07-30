@@ -11,5 +11,6 @@
 void board_disable_failsafe(void);
 void board_eth_reset(void);
 void board_sys_reset(bool failsafe_mode);
+void board_invoke_bsl(void);
 
 #endif /* __BOARD_H */

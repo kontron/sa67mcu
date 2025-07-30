@@ -16,5 +16,7 @@
 
 extern unsigned int reset_cause;
 void sysctl_init(void);
+void sysctl_invoke_bsl(void);
+void sysctl_por(void);
 
 #endif /* __SYSCTL_H */

@@ -6,6 +6,7 @@
 #include <stdbool.h>
 #include <stddef.h>
 #include "adc.h"
+#include "board.h"
 #include "bootmode.h"
 #include "config.h"
 #include "cp.h"
@@ -147,6 +148,13 @@ static void eth_reset_blocking(void)
 	gpio_set(FORCE_GBE_RST_PIN, 0);
 }
 
+static volatile bool do_invoke_bsl;
+
+void board_invoke_bsl(void)
+{
+	do_invoke_bsl = true;
+}
+
 static void pmic_abort_power_up(void)
 {
 	unsigned char buf[2];
@@ -242,6 +250,11 @@ int main(void)
 			led_set_period(200);
 		else
 			led_set_period(1000);
+
+		if (do_invoke_bsl) {
+			printf("Rebooting into BSL..\n");
+			sysctl_invoke_bsl();
+		}
 
 		if (do_eth_reset) {
 			printf("Resetting ethernet PHYs..\n");
