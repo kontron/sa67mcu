@@ -84,3 +84,108 @@ The following flags are supported:
 | 15 | Debug enable |
 
 ## Register Map
+
+| Offset | Name | Description |
+| --- | --- | --- |
+| 0 | CFG\_CTRL | Configuration control register |
+| 1 | CFG\_OFS  | Configuration offset register |
+| 2 | CFG\_DATA | Configuration config data register |
+| 3 | VERSION | MCU version register |
+| 4 | WDT\_CTRL | Watchdog control register |
+| 5 | WDT\_TOUT | Watchdog timeout register |
+| 6 | WDT\_KICK | Watchdog kick register |
+| 7 | WDT\_CNT  | Watchdog counter register |
+| 16 | BOOTMODE\_L | Bootmode (low) register |
+| 17 | BOOTMODE\_H | Bootmode (high) register |
+| 254 | BL\_CTRL | Bootloader control register |
+| 255 | DEBUG | Debug register |
+
+### Configuration control register
+
+| Bit(s) | Name | Access | Description |
+| --- | --- | --- | --- |
+| 7 | CTRL\_BUSY | RO | Inidicates wether a configuration action is still in progress |
+| 2 | CTRL\_ERASE | WO | Writing 1 to this bit triggers a configuration erase |
+| 1 | CTRL\_SAVE | WO | Writing 1 to this bit triggers a configuration save |
+| 0 | CTRL\_LOAD | WO | Writing 1 to this bit triggers a configuration load |
+
+> [!NOTE]
+> You must only set one bit at a time, setting multiple bits is undefined.
+
+### Configuration offset register
+
+| Bit(s) | Name | Access | Description |
+| --- | --- | --- | --- |
+| 2:0 | OFS | RW | Offset of the configuration data to access |
+
+### Configuration config data register
+
+| Bit(s) | Name | Access | Description |
+| --- | --- | --- | --- |
+| 7:0 | DATA | RW | Configuration data at the offset OFS |
+
+### MCU version register
+
+| Bit(s) | Name | Access | Description |
+| --- | --- | --- | --- |
+| 7:0 | VERSION | RO | Version of the MCU application. A value of 255 denotes an (unreleased) debug version |
+
+### Watchdog control register
+
+| Bit(s) | Name | Access | Description |
+| --- | --- | --- | --- |
+| 7 | OE1 | RW | WDT\_TIME\_OUT# output enable |
+| 6 | OE0 | RW | SoC reset output enable |
+| 2 | LOCK | RW | Control register lock bit. If 1, writing to the control registger is prohibited. |
+| 1 | EN1 | RW | Failsafe watchdog enable |
+| 0 | EN0 | RW | Watchdog enable |
+
+> [!NOTE]
+> There is just one watchdog counter. If the failsafe watchdog is enabled, the
+> SoC reset output is enabled and a timeout occurs, the board will restart in
+> failsafe mode.
+
+### Watchdog timeout register
+
+| Bit(s) | Name | Access | Description |
+| --- | --- | --- | --- |
+| 7:0 | TOUT | RW | Timeout in seconds |
+
+### Watchdog kick register
+
+| Bit(s) | Name | Access | Description |
+| --- | --- | --- | --- |
+| 7:0 | KICK | WO | Write the magic value 6Bh to reset the watchdog counter |
+
+### Watchdog counter register
+
+| Bit(s) | Name | Access | Description |
+| --- | --- | --- | --- |
+| 7:0 | CNT | RO | The current watchdog counter value |
+
+### SoC bootmode (high) register
+
+| Bit(s) | Name | Access | Description |
+| --- | --- | --- | --- |
+| 7:0 | BOOTMODE\_L | RW | Reading returns the low part of the current bootmode.  Writing to this register will cause the board to use that bootmode on the next reset. Returns back to its default value after the reset. |
+
+### SoC bootmode (low) register
+
+| Bit(s) | Name | Access | Description |
+| --- | --- | --- | --- |
+| 7:0 | BOOTMODE\_H | RW | Same as BOOTMODE\_L but for the high part. |
+
+### Bootloader control register
+
+| Bit(s) | Name | Access | Description |
+| --- | --- | --- | --- |
+| 7:0 | INVOKE\_BL | WO | Writing the magic value A8h to this register will cause the MCU to reset into bootloader mode. Used for updating the MCU. |
+
+### Debug register
+
+| Bit(s) | Name | Access | Description |
+| --- | --- | --- | --- |
+| 1:0 | DBG\_CMD | WO | Writing 0 will issue an ethernet PHY reset pulse. Writing 1 will issue a SoC reset. All other values are reserved. |
+
+> [!NOTE]
+> To access this register the debug configuration flag has to be set.
