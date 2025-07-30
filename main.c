@@ -240,6 +240,7 @@ int main(void)
 	nvic_enable_irq(INT_GROUP1_IRQ);
 
 	while (true) {
+		ticks_loop();
 		wdt_kick();
 		config_loop();
 

@@ -38,22 +38,19 @@
 #include "nvic.h"
 #include "ticks.h"
 
-static volatile ticks_t ticks;
+static volatile ticks_t __ticks;
+ticks_t ticks;
 
 void timg2_irq(void)
 {
-	ticks++;
+	__ticks++;
 }
 
-ticks_t ticks_get(void)
+void ticks_loop(void)
 {
-	ticks_t ret;
-
 	nvic_disable_irq(TIMG2_IRQ);
-	ret = ticks;
+	ticks = __ticks;
 	nvic_enable_irq(TIMG2_IRQ);
-
-	return ret;
 }
 
 /*
@@ -63,10 +60,10 @@ ticks_t ticks_get(void)
 const char *ticks_str(void)
 {
 	static char buf[sizeof("4294967.296")];
-	unsigned int ticks;
 
-	ticks = (unsigned int)ticks_get();
-	mini_snprintf(buf, sizeof(buf), "%d.%03d", ticks / 1000, ticks % 1000);
+	mini_snprintf(buf, sizeof(buf), "%d.%03d",
+		      (unsigned int)ticks / 1000,
+		      (unsigned int)ticks % 1000);
 	buf[sizeof(buf) - 1] = '\0';
 
 	return buf;

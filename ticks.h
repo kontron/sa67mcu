@@ -7,9 +7,10 @@
 #define __TICKS_H
 
 typedef unsigned long long ticks_t;
+extern ticks_t ticks;
 
 void ticks_init(void);
-ticks_t ticks_get(void);
+void ticks_loop(void);
 const char *ticks_str(void);
 
 #endif /* __TICKS_H */
