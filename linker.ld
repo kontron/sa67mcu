@@ -69,6 +69,11 @@ SECTIONS
 	{
 		KEEP(*(.bslconfig))
 	} >BSL_CONFIG
+
+	/DISCARD/ :
+	{
+		*(.ARM.exidx .ARM.exidx.* .ARM.extab.*);
+	}
 }
 
 _end = .;
