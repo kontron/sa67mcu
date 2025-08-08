@@ -369,6 +369,10 @@ void i2c0_irq(void)
 		break;
 	case S_READ_OR_OFFSET:
 		switch (idx) {
+		case IIDX_SSTART:
+			i2c_flush_fifos();
+			iow(I2C_STXDATA, i2c_txdata(i2c_offset));
+			break;
 		case IIDX_STXFIFOTRG:
 			i2c_offset += 1;
 			iow(I2C_STXDATA, i2c_txdata(i2c_offset));
