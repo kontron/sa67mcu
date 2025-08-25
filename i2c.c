@@ -350,6 +350,12 @@ static void i2c_rxdata(unsigned char offset, unsigned char value)
 	}
 }
 
+static void i2c_preload_output_buffer(void)
+{
+	i2c_flush_fifos();
+	iow(I2C_STXDATA, i2c_txdata(i2c_offset));
+}
+
 void i2c0_irq(void)
 {
 	unsigned int idx = ior(I2C_IIDX);
@@ -362,8 +368,7 @@ void i2c0_irq(void)
 			 * Already preload the output buffer as we don't know if
 			 * this is a read or a write.
 			 */
-			i2c_flush_fifos();
-			iow(I2C_STXDATA, i2c_txdata(i2c_offset));
+			i2c_preload_output_buffer();
 			i2c_state = S_READ_OR_OFFSET;
 			break;
 		default:
@@ -373,8 +378,7 @@ void i2c0_irq(void)
 	case S_READ_OR_OFFSET:
 		switch (idx) {
 		case IIDX_SSTART:
-			i2c_flush_fifos();
-			iow(I2C_STXDATA, i2c_txdata(i2c_offset));
+			i2c_preload_output_buffer();
 			break;
 		case IIDX_STXFIFOTRG:
 			i2c_offset += 1;
@@ -399,8 +403,7 @@ void i2c0_irq(void)
 			iow(I2C_STXDATA, i2c_txdata(i2c_offset));
 			break;
 		case IIDX_SSTART:
-			i2c_flush_fifos();
-			iow(I2C_STXDATA, i2c_txdata(i2c_offset));
+			i2c_preload_output_buffer();
 			i2c_state = S_READ_OR_OFFSET;
 			break;
 		case IIDX_SSTOP:
@@ -417,8 +420,7 @@ void i2c0_irq(void)
 			i2c_offset += 1;
 			break;
 		case IIDX_SSTART:
-			i2c_flush_fifos();
-			iow(I2C_STXDATA, i2c_txdata(i2c_offset));
+			i2c_preload_output_buffer();
 			i2c_state = S_READ_OR_OFFSET;
 			break;
 		case IIDX_SSTOP:
