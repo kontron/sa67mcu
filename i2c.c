@@ -4,6 +4,7 @@
  *
  */
 
+#include "adc.h"
 #include "board.h"
 #include "bootmode.h"
 #include "config.h"
@@ -315,6 +316,8 @@ static unsigned char i2c_txdata(unsigned char offset)
 		return version;
 	case 4 ... 7:
 		return sl28wdt_read(offset - 4);
+	case 8 ... 13:
+		return adc_read(offset - 8);
 	default:
 		return 0;
 	}

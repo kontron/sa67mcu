@@ -9,7 +9,7 @@
 #define ADC_VREF 1400
 
 void adc_init(void);
-unsigned int adc_value(unsigned int chan);
-int adc_temperature(void);
+void adc_loop(void);
+unsigned char adc_read(unsigned char offset);
 
 #endif /* #ifndef __ADC_H */

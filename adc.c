@@ -4,7 +4,11 @@
  */
 
 #include "adc.h"
+#include "board.h"
+#include "cp.h"
 #include "misc.h"
+#include "systick.h"
+#include "ticks.h"
 
 #define ADC_BASE		0x40004000
 #define ADC_PWREN		(ADC_BASE + 0x0800)
@@ -18,6 +22,8 @@
 #define ADC_CTL1		(ADC_BASE + 0x1104)
 #define CTL1_CONSEQ_SEQ_REPEAT	(3 << 16)
 #define CTL1_SC			BIT(8)
+#define CTL1_AVGD_SHIFT_BY_3	(3 << 28)
+#define CTL1_AVGN_8_TIMES	(3 << 24)
 
 #define ADC_CTL2		(ADC_BASE + 0x1108)
 #define CTL2_START(n)		((n) << 16)
@@ -29,41 +35,91 @@
 #define MEMCTL_CHAN(n)		((n) << 0)
 #define ADC_MEMRES(n)		(ADC_BASE + 0x1280 + (n) * 4)
 
+#define TEMP_SENSE0		0x41c4003c
+#define TS_TRIM			30000
+#define TS_C			((int)(1 / -0.00175))
+
+#define REG_A0_L	0
+#define REG_A0_H	1
+#define REG_A1_L	2
+#define REG_A1_H	3
+#define REG_TEMP_L	4
+#define REG_TEMP_H	5
+
 void adc_init(void)
 {
 	iow(ADC_PWREN, PWREN_KEY | PWREN_ENABLE);
 
 	/* sample three channels */
 	iow(ADC_CTL2, CTL2_START(0) | CTL2_END(2));
-	iow(ADC_SCOMP0, 32);
+	iow(ADC_SCOMP0, 64);
 	iow(ADC_MEMCTL(0), MEMCTL_CHAN(0) | MEMCTL_VRSEL_VREF);
-	iow(ADC_MEMCTL(1), MEMCTL_CHAN(8) | MEMCTL_VRSEL_VREF);
-	iow(ADC_MEMCTL(2), MEMCTL_CHAN(11) | MEMCTL_VRSEL_VREF);
+	iow(ADC_MEMCTL(1), MEMCTL_CHAN(11) | MEMCTL_VRSEL_VREF);
+	iow(ADC_MEMCTL(2), MEMCTL_CHAN(8) | MEMCTL_VRSEL_VREF);
 	iow(ADC_CTL1, CTL1_CONSEQ_SEQ_REPEAT | CTL1_SC);
 	iow(ADC_CTL0, CTL0_SCLKDIV_DIV_BY_8 | CTL0_ENC);
 }
 
-unsigned int adc_value(unsigned int chan)
+unsigned int adc_voltage(unsigned int chan)
 {
 	switch (chan) {
 	case 0:
-		return ior(ADC_MEMRES(0));
+		return (ior(ADC_MEMRES(0)) * ADC_VREF) >> 12;
 	case 1:
-		return ior(ADC_MEMRES(1));
-	case 2:
-		return ior(ADC_MEMRES(2));
+		return (ior(ADC_MEMRES(2)) * ADC_VREF) >> 12;
 	default:
 		return 0;
 	}
 }
 
-#define TEMP_SENSE0	0x41c4003c
-#define TS_TRIM		30000
-#define TS_C		((int)(1 / -0.00175))
-
-int adc_temperature(void)
+static int adc_temperature(void)
 {
-	int diff = ior(ADC_MEMRES(2)) - ior(TEMP_SENSE0);
+	int diff = ior(ADC_MEMRES(1)) - ior(TEMP_SENSE0);
 
-	return (((int)ADC_VREF * diff * TS_C) >> 12) + TS_TRIM;
+	return ((((int)ADC_VREF * diff * TS_C) >> 12) + TS_TRIM) / 100;
+}
+
+static unsigned short adc_cache[3];
+
+unsigned char adc_read(unsigned char offset)
+{
+	switch (offset) {
+	case REG_A0_L:
+		return adc_cache[0] & 0xff;
+	case REG_A0_H:
+		return adc_cache[0] >> 8;
+	case REG_A1_L:
+		return adc_cache[1] & 0xff;
+	case REG_A1_H:
+		return adc_cache[1] >> 8;
+	case REG_TEMP_L:
+		return adc_cache[2];
+	case REG_TEMP_H:
+		return adc_cache[2] >> 8;
+	}
+
+	return 0;
+}
+
+void adc_loop(void)
+{
+	static ticks_t next_update_cp = 0;
+	static ticks_t next_update = 0;
+
+	/* do an update about every 1s */
+	if (next_update < ticks) {
+		next_update = ticks + 1000;
+		adc_cache[0] = adc_voltage(0);
+		adc_cache[2] = (unsigned short)adc_temperature();
+	}
+
+	/* do an update about every 120s */
+	if (next_update_cp < ticks) {
+		cp_enable();
+		udelay(2000);
+		cp_disable();
+		udelay(500);
+		adc_cache[1] = adc_voltage(1);
+		next_update_cp = ticks + 120000;
+	}
 }

@@ -95,6 +95,12 @@ The following flags are supported:
 | 5 | WDT\_TOUT | Watchdog timeout register |
 | 6 | WDT\_KICK | Watchdog kick register |
 | 7 | WDT\_CNT  | Watchdog counter register |
+| 8 |  ADC\_A0\_L | AIN0 (low) register |
+| 9 |  ADC\_A0\_H | AIN0 (high) register |
+| 10 | ADC\_A1\_L | AIN1 (low) register |
+| 11 | ADC\_A1\_H | AIN1 (high) register |
+| 12 | ADC\_TEMP\_L	| Temperature (low) register |
+| 13 | ADC\_TEMP\_H	| Temperature (high) register |
 | 16 | BOOTMODE\_L | Bootmode (low) register |
 | 17 | BOOTMODE\_H | Bootmode (high) register |
 | 254 | BL\_CTRL | Bootloader control register |
@@ -129,6 +135,25 @@ The following flags are supported:
 | Bit(s) | Name | Access | Description |
 | --- | --- | --- | --- |
 | 7:0 | VERSION | RO | Version of the MCU application. A value of 255 denotes an (unreleased) debug version |
+
+### AINn and temperature registers
+
+The ADC on the MCU is used to measure voltages and the temperature of the MCU
+(which roughly correspondes to the board/environment temperature. All return a
+16bit value and reading the low part will automatically trigger a capture/update
+of the high part so that the access is atomic.
+
+> [!NOTE]
+> The update interval of the VDD\_RTC measurement is so large because each
+> measurement will drain the battery a little bit due to leakage current of the
+> ADC pin and due to the sample-and-hold capacitor. There is a special circuit
+> to keep the leakage current at a minimum (that is about tens of pA).
+
+| Channel | Voltage | Data type | Unit | Update interval |
+| --- | --- | --- | --- | --- |
+| AIN0 | VDDIN | u16 | 1mV | 1s |
+| AIN1 | VDD\_RTC | u16 | 1mV | 120s |
+| TEMP | Internal MCU sensor | s16 | 0.1degC | 1s |
 
 ### Watchdog control register
 

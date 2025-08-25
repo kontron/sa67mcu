@@ -243,6 +243,7 @@ int main(void)
 		ticks_loop();
 		wdt_kick();
 		config_loop();
+		adc_loop();
 
 		/* update the LED state */
 		if (!board_powered())
