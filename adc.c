@@ -64,9 +64,11 @@ unsigned int adc_voltage(unsigned int chan)
 {
 	switch (chan) {
 	case 0:
-		return (ior(ADC_MEMRES(0)) * ADC_VREF) >> 12;
+		/* 100k / 33.2k voltage divider */
+		return ((ior(ADC_MEMRES(0)) * ADC_VREF) >> 12) * (10000 + 3320) / 3320;
 	case 1:
-		return (ior(ADC_MEMRES(2)) * ADC_VREF) >> 12;
+		/* 47.5k / 33.2k voltage divider */
+		return ((ior(ADC_MEMRES(2)) * ADC_VREF) >> 12) * (4750 + 3320) / 3320;
 	default:
 		return 0;
 	}
@@ -107,14 +109,14 @@ void adc_loop(void)
 	static ticks_t next_update = 0;
 
 	/* do an update about every 1s */
-	if (next_update < ticks) {
+	if (next_update <= ticks) {
 		next_update = ticks + 1000;
 		adc_cache[0] = adc_voltage(0);
 		adc_cache[2] = (unsigned short)adc_temperature();
 	}
 
 	/* do an update about every 120s */
-	if (next_update_cp < ticks) {
+	if (next_update_cp <= ticks) {
 		cp_enable();
 		udelay(2000);
 		cp_disable();
