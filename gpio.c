@@ -11,6 +11,7 @@
 #define PWREN_KEY		0x26000000
 #define PWREN_ENABLE		BIT(0)
 
+#define GPIO_IIDX		(GPIO_BASE + 0x1020)
 #define GPIO_IMASK		(GPIO_BASE + 0x1028)
 #define GPIO_ICLR		(GPIO_BASE + 0x1048)
 #define GPIO_DOUTSET31_0	(GPIO_BASE + 0x1290)
@@ -110,4 +111,9 @@ void gpio_irq_unmask(int pin)
 void gpio_irq_mask(int pin)
 {
 	iow(GPIO_IMASK, ior(GPIO_IMASK) & ~(1 << pin));
+}
+
+int gpio_irq_pin(void)
+{
+	return ior(GPIO_IIDX) - 1;
 }

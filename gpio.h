@@ -27,5 +27,6 @@ void gpio_conf_irq(int pin, int mode);
 void gpio_irq_ack(int pin);
 void gpio_irq_unmask(int pin);
 void gpio_irq_mask(int pin);
+int gpio_irq_pin(void);
 
 #endif /* __GPIO_H */
