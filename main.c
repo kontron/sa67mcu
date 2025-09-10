@@ -48,6 +48,9 @@ const struct iomux_config iomux_uart_debug_config[] = {
 #define MCU_SPI_FLASH_WP_DISn_PIN 13
 #define POR_REQn_PIN 15
 #define FORCE_GBE_RST_PIN 17
+#define PCIE_WAKEn_PIN 24
+#define GBE_INTn_PIN 25
+#define RTC_INTn_PIN 26
 
 const struct iomux_config iomux_default_config[] = {
 	/* PA0 (SCL) */
@@ -88,11 +91,17 @@ const struct iomux_config iomux_default_config[] = {
 	{ 10, PINCM_PC | PINCM_PF_GPIO },
 	/* PA10 (BOOTMODE13) */
 	{ 11, PINCM_PC | PINCM_PF_GPIO },
+	/* PA24 (PCIE_WAKE#) */
+	{ 25, PINCM_INENA | PINCM_PC | PINCM_PF_GPIO },
+	/* PA25 (GBE_INT#) */
+	{ 26, PINCM_INENA | PINCM_PC | PINCM_PF_GPIO },
+	/* PA26 (RTC_INT#) */
+	{ 27, PINCM_INENA | PINCM_PC | PINCM_PF_GPIO },
 	{ 0 }
 };
 
 #define PMIC_MASK_STARTUP 0x52
-
+#define PMIC_FSM_I2C_TRIGGERS 0x85
 
 static bool failsafe_mode;
 static bool failsafe_mode_latch;
@@ -104,7 +113,7 @@ void board_disable_failsafe(void)
 	do_disable_failsafe = true;
 }
 
-void group1_irq(void)
+static void por_irq(void)
 {
 	bool por = !gpio_get(POR_REQn_PIN);
 
@@ -155,6 +164,19 @@ void board_invoke_bsl(void)
 	do_invoke_bsl = true;
 }
 
+static void pmic_trigger_0(void)
+{
+	unsigned char buf[2];
+	int ret;
+
+	buf[0] = PMIC_FSM_I2C_TRIGGERS;
+	buf[1] = 0x01;
+
+	ret = i2c_xfer_blocking(PMIC_I2C_ADDR, buf, sizeof(buf), NULL, 0);
+	if (ret)
+		printf("ERROR: Couldn't write to PMIC\n");
+}
+
 static void pmic_abort_power_up(void)
 {
 	unsigned char buf[2];
@@ -181,6 +203,34 @@ static bool board_powered(void)
 	 * power state by the external pull-up.
 	 */
 	return gpio_get(MCU_SPI_FLASH_WP_DISn_PIN);
+}
+
+static void wakeup_irq(int source)
+{
+	printf("wakeup event from %d\n", source);
+
+	if (!board_powered())
+		pmic_trigger_0();
+}
+
+void group1_irq(void)
+{
+	int pin = gpio_irq_pin();
+
+	switch (pin)
+	{
+	case POR_REQn_PIN:
+		por_irq();
+		break;
+	case PCIE_WAKEn_PIN:
+	case GBE_INTn_PIN:
+	case RTC_INTn_PIN:
+		wakeup_irq(pin);
+		break;
+	default:
+		printf("unknown irq from pin %d\n", pin);
+		break;
+	}
 }
 
 int main(void)
@@ -236,6 +286,24 @@ int main(void)
 		      GPIO_IRQ_FALLING_EDGE |GPIO_IRQ_RISING_EDGE);
 	gpio_irq_ack(POR_REQn_PIN);
 	gpio_irq_unmask(POR_REQn_PIN);
+
+	gpio_in(PCIE_WAKEn_PIN);
+	gpio_conf_irq(PCIE_WAKEn_PIN, GPIO_IRQ_FALLING_EDGE);
+	gpio_irq_ack(PCIE_WAKEn_PIN);
+	gpio_irq_unmask(PCIE_WAKEn_PIN);
+
+#if 0
+	/* GBE_INT# and RTC_INT# are broken for now */
+	gpio_in(GBE_INTn_PIN);
+	gpio_conf_irq(GBE_INTn_PIN, GPIO_IRQ_FALLING_EDGE);
+	gpio_irq_ack(GBE_INTn_PIN);
+	gpio_irq_unmask(GBE_INTn_PIN);
+
+	gpio_in(RTC_INTn_PIN);
+	gpio_conf_irq(RTC_INTn_PIN, GPIO_IRQ_FALLING_EDGE);
+	gpio_irq_ack(RTC_INTn_PIN);
+	gpio_irq_unmask(RTC_INTn_PIN);
+#endif
 
 	nvic_enable_irq(INT_GROUP1_IRQ);
 
