@@ -43,7 +43,7 @@ failsafe bootloader and a SoC reset is issued.
 The controller can measure (but not supervise) the board input and the RTC
 voltage. The latter is tricky to measure because a measurement will always draw
 a bit of power from the voltage rail. To minimize that effect, the voltage is
-measured only every 10s. Also because the ADC pins of the used microcontroller
+measured only every 120s. Also because the ADC pins of the used microcontroller
 have quite a high input leakage current (compared to the nA of the RTC) it is
 gated by a FET. That FET needs a voltage larger than the RTC voltage. For that,
 the board features a charge pump using a simple voltage ladder. The controller
