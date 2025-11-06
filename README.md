@@ -12,6 +12,30 @@ powered-off and provides basic house keeping services and glue logic.
 - Board settings stored in non-volatile memory
 - Debug UART and debug registers
 
+## Flashing the embedded controller
+
+It's always possible to flash the embedded controller, no matter what software
+it running on it[^1]. To flash the controller, you first have to enter the
+bootloader mode. If this firmware is running (and responding) you can use the 
+[bootloader control register](#bootloader-control-register) to invoke it. If the
+software is not responding or if there is an programming error which renders the
+firmware unusable, you can enter the bootloader mode by asserting the
+`FORCE_RECOV#` pin during board reset. This will reset the controller and force
+it into bootloader mode without starting the application at all.
+
+Once in bootloader mode, you can use
+[mspm0flash](https://github.com/kontron/mspm0flash) to flash it. Keep in mind,
+that bootloader of the controller has a hardcoded timeout of about 10s after
+which it will go into deep sleep mode where only a reset can wake it up from.
+To somewhat cirumvent this restriction, the SoC bootloader will issue a
+`CONNECT` command to stop that timeout. But this has the drawback that the
+mspm0flash tool *have* to skip that command (`--no-connect`) otherwise the I2C
+bus will be stuck indefinitely (due to clock streching of the BSL).
+
+[^1]: There is one exception and that is the BSL configuration. In theory, you
+can create and flash a configuration which will render the bootloader mode
+unusable.
+
 ## Watchdog
 
 The watchdog is a software reimplementation of the SMARC-sAL28 [CPLD
@@ -29,12 +53,12 @@ timeout is 255s.
 ### Failsafe Mechanism
 
 If the failsafe watchdog is not disabled by the configuration it automatically
-starts when the board is powered-up or reset[^1]. The watchdog has to be stopped
+starts when the board is powered-up or reset[^2]. The watchdog has to be stopped
 by the bootloader within the timeout period of 10s. If that is not the case, the
 bootsource is switched to the onboard SPI flash which contains a non-volatile
 failsafe bootloader and a SoC reset is issued.
 
-[^1]: While the failsafe watchdog is running a reset will *not* reset the
+[^2]: While the failsafe watchdog is running a reset will *not* reset the
     watchdog itself. Thus, if you keep the board in reset after power is
     applied, the failsafe watchdog will bite after 10s.
 
