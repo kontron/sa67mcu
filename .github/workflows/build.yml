@@ -18,3 +18,10 @@ jobs:
         run: sudo apt-get -y install gcc-arm-none-eabi
       - name: Compile
         run: make
+      - name: Upload firmware binary
+        uses: actions/upload-artifact@v4
+        with:
+          name: sa67mcu
+          path: |
+            mcu.elf
+            mcu.bin
