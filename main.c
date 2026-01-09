@@ -45,7 +45,7 @@ const struct iomux_config iomux_uart_debug_config[] = {
 
 #define INT_GROUP1_IRQ 1
 
-#define MCU_SPI_FLASH_WP_DISn_PIN 13
+#define MCU_INTn_PIN 12
 #define POR_REQn_PIN 15
 #define FORCE_GBE_RST_PIN 17
 #define PCIE_WAKEn_PIN 24
@@ -63,8 +63,8 @@ const struct iomux_config iomux_default_config[] = {
 	{ 17, PINCM_PC | PINCM17_PF_TIMG0_C0 },
 	/* PA18 (healthy LED) */
 	{ 19, PINCM_PC | PINCM19_PF_TIMG4_C1 },
-	/* PA13 (MCU_SPI_FLASH_WP_DIS#) */
-	{ 14, PINCM_INENA | PINCM_PC | PINCM_HIZ1 | PINCM_PF_GPIO },
+	/* PA12 (MCU_INT#) */
+	{ 13, PINCM_INENA | PINCM_PC | PINCM_HIZ1 | PINCM_PF_GPIO },
 	/* PA15 (POR_REQ#) */
 	{ 16, PINCM_INENA | PINCM_PC | PINCM_HIZ1 | PINCM_PF_GPIO },
 	/* PA17 (FORCE_GBE_RST) */
@@ -199,10 +199,10 @@ static void pmic_configure(void)
 static bool board_powered(void)
 {
 	/*
-	 * XXX we don't use the WP disable pin for now. Thus infer the board
+	 * XXX we don't use the interrupt pin for now. Thus infer the board
 	 * power state by the external pull-up.
 	 */
-	return gpio_get(MCU_SPI_FLASH_WP_DISn_PIN);
+	return gpio_get(MCU_INTn_PIN);
 }
 
 static void wakeup_irq(int source)
