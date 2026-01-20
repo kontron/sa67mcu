@@ -153,7 +153,7 @@ of the high part so that the access is atomic.
 | --- | --- | --- | --- | --- |
 | AIN0 | VDDIN | u16 | 1mV | 1s |
 | AIN1 | VDD\_RTC | u16 | 1mV | 120s |
-| TEMP | Internal MCU sensor | s16 | 0.1degC | 1s |
+| TEMP | Internal MCU sensor | s16 | 0.1°C | 1s |
 
 ### Watchdog control register
 
