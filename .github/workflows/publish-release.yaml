@@ -11,9 +11,16 @@ jobs:
     permissions:
       contents: write
     steps:
-      - name: Checkout
+      - name: Checkout Repository
         uses: actions/checkout@v6
+      - name: Install Dependencies
+        run: sudo apt-get -y install gcc-arm-none-eabi
+      - name: Compile
+        run: make
       - name: Publish release
         uses: ghalactic/github-release-from-tag@v6
         with:
           prerelease: "true"
+          assets: |
+            - path: mcu.elf
+            - path: mcu.bin
